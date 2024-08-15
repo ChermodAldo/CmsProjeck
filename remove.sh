@@ -1,7 +1,3 @@
-if [ $AXERON = false ]; then
-	echo "Only Support in Laxeron"
-fi
-
 echo ""
 echo "》》 Proses Uninstall 𝙲𝙼𝚂 𝚅𝙴𝚁𝚂𝙸𝙾𝙽 -> 11.0 《《"
 echo ""
