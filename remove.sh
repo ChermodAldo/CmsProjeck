@@ -1,12 +1,12 @@
+$AXFUN
+import axeron.prop
+
 if [ $AXERON = false ]; then
 	echo "Only Support in Laxeron"
 fi
 
-source $FUNCTION
-source $(dirname $0)/axeron.prop
-
 echo ""
-echo "》》 Proses Uninstall 𝙲𝙼𝚂 𝚅𝙴𝚁𝚂𝙸𝙾𝙽 -> 10.0 《《"
+echo "》》 Proses Uninstall 𝙲𝙼𝚂 𝚅𝙴𝚁𝚂𝙸𝙾𝙽 -> 11.0 《《"
 echo ""
 sleep 0.5
 echo "Wait.."
@@ -29,6 +29,7 @@ reset_system_properties() {
 }
 uninstall() {
     reset_system_properties
+    setprop debug.hwui.renderer opengl
 }
 
 uninstall > /dev/null 2>&1
