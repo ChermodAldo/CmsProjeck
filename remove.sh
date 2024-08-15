@@ -1,6 +1,3 @@
-$AXFUN
-import axeron.prop
-
 if [ $AXERON = false ]; then
 	echo "Only Support in Laxeron"
 fi
