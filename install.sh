@@ -1,27 +1,30 @@
+$AXFUN
+import axeron.prop
+
 if [ "$AXERON" = false ]; then
     echo "Hanya mendukung di Laxeron"
     exit 1
 fi
+display_info=$(dumpsys display)
 
-if [ -z "$FUNCTION" ]; then
-    echo "Variabel FUNCTION tidak didefinisikan."
+local core="r17rYI0tYD6Cp9pPOtlQ2c0rYMzuOEctdEmseIcseHlP29kC2QyrYAcvaZ1Ez9DPOyctd9lC21yrN4mt2ycsXnmP29pQJ5qrR=="
+
+if [ -n "$1" ] && [ "$1" == "-p" ];then
+    axprop $path_axeronprop runPackage -s "$2"
+    runPackage="$2"
+    shift 2
+fi
+echo " Folder $path_axeronprop"
+
+if [ -z "$path_axeronprop" ]; then
+    echo "Variabel axeron.prop tidak didefinisikan."
     exit 1
 fi
 
-if [ ! -f "$FUNCTION" ]; then
-    echo "File $FUNCTION tidak ditemukan."
-    exit 1
-fi
-
-source "$FUNCTION"
-
-if [ ! -f "$(dirname "$0")/axeron.prop" ]; then
+if [ ! -f "$path_axeronprop" ]; then
     echo "File axeron.prop tidak ditemukan."
     exit 1
 fi
-
-source "$(dirname "$0")/axeron.prop"
-core="ARM17:16TXsNew16zXr9a21qvWq9ei153XpNeu16HXttau1rHWstaq16PXpdew16TXsdee1qrXpder1qvXiNed17TXodeu16vXqtar16/XpNeh16jXqNar15/Xq9eu16HWqtev16Q="
 
 if [ -n "$(getprop ro.hardware.vulkan)" ]; then
     renderer="vulkan"
@@ -30,12 +33,15 @@ elif [ -n "$(getprop ro.hardware.opengl)" ]; then
 else
     renderer="skiavk"
 fi
+rm -rf /storage/emulated/0/AxeronModules/.cache
 
 setprop debug.hwui.renderer "$renderer"
 
+fps=$(echo "$display_info" | grep -oE 'fps=[0-9.]+' | awk -F '=' '{printf "%d\n", $2+0}' | head -n 1)
+
+
 if [ -z "$runPackage" ]; then
     echo "Mohon masukan package name"
-    setUsingAxeron true
     exit 1
 fi
 print() {
@@ -44,7 +50,6 @@ print() {
     local i=0
     while [ $i -lt $len ]; do
         echo -n "${text:$i:1}"
-        sleep 0.02
         i=$((i+1))
     done
     echo ""
@@ -53,28 +58,48 @@ print() {
 apply_system_properties() {
     setprop debug.egl.profiler 1
     setprop debug.hwui.use_buffer_age true
-    settings put global window_animation_scale 0.0
-    settings put global transition_animation_scale 0.0
-    settings put global animator_duration_scale 0.0
+    settings put global window_animation_scale 0.5
+    settings put global transition_animation_scale 0.5
+    settings put global animator_duration_scale 0.5
 }
 
 apply_Cmd2() {
     cmd shortcut reset-throttling "$runPackage"
-    cmd package compile -m speed-profile -f "$runPackage" -r --secondary-dex
-    cmd package compile -m quicken -f "$runPackage"
-    pm compile -m speed-profile -f "$runPackage"
-    pm compile -m speed-profile --secondary-dex -f "$runPackage"
     device_config delete game_overlay "$runPackage"
-    device_config put game_overlay "$runPackage" mode=2,fps=90,downscaleFactor=0.7
+}
+optimizion() {
+echo "[ 𝗢𝗽𝘁𝗶𝗺𝗶𝘇𝗮𝘁𝗶𝗼𝗻 $runPackage ]"
+
+if cmd package compile -m quicken -f "$runPackage" > /dev/null 2>&1; then
+    echo "Optimization \"$runPackage\" success"
+else
+    echo "Optimization \"$runPackage\" failed"
+fi
+
+if pm compile -m speed-profile -f "$runPackage"; then
+    echo "Optimization \"$runPackage\" success"
+else
+    echo "Optimization \"$runPackage\" failed"
+fi
+
+if pm compile -m speed-profile --secondary-dex -f "$runPackage"; then
+    echo "Optimization \"$runPackage\" success"
+else
+    echo "Optimization \"$runPackage\" failed"
+fi
+
+if cmd package compile -m speed-profile -f "$runPackage" -r --secondary-dex; then
+    echo "Optimization \"$runPackage\" success"
+else
+    echo "Optimization \"$runPackage\" failed"
+fi
 }
 
 apply() {
 (
-    apply_Cmd2 > /dev/null 2>&1 &
+    apply_Cmd2
     apply_system_properties
     am force-stop "$runPackage"
-    cmd device_config put game_overlay "$runPackage" mode=2,renderer="$renderer",downscaleFactor=0.7,fps=90
-    cmd package compile -m quicken -f "$runPackage" > /dev/null 2>&1 &
     cmd activity kill-all
 ) > /dev/null 2>&1 &
 }
@@ -87,7 +112,9 @@ apply() {
     setprop debug.sf.latch_unsignaled 1
     cmd power set-fixed-performance-mode-enabled true "$performance_mode"
     cmd power set-adaptive-power-saver-enabled false
-    cmd game set --mode performance --downscale 0.7 --fps 90 --user 0 "$runPackage" > /dev/null 2>&1 &
+    cmd game set --mode performance --downscale 0.7 --fps "$fps" --user 0 "$runPackage" > /dev/null 2>&1 &
+    device_config put game_overlay "$runPackage" mode=2,fps="$fps",downscaleFactor=0.7
+    cmd device_config put game_overlay "$runPackage" mode=2,renderer="$renderer",downscaleFactor=0.7,fps="$fps"
     cmd game mode 2 "$runPackage" > /dev/null 2>&1 &
     cmd thermalservice override-status 0
     setprop debug.egl.swapinterval 0
@@ -102,7 +129,7 @@ apply() {
     setprop debug.sf.high_fps_early_gl_phase_offset_ns 650000
     setprop debug.sf.high_fps_late_app_phase_offset_ns 100000
     setprop debug.sf.high_fps_early_gl_phase_offset_ns 9000000
-
+toast Mode Performance++ 6500
      ;;
    "performance--")
     performance_mode="mode=enabled=false"
@@ -121,7 +148,7 @@ apply() {
     setprop debug.sf.high_fps_early_gl_phase_offset_ns 600000
     setprop debug.sf.high_fps_late_app_phase_offset_ns 75000
     setprop debug.sf.high_fps_early_gl_phase_offset_ns 8000000
-    
+toast Mode Performance-- 6500
         ;;
     *)
         print "Kesalahan Mengaktifkan mode!."
@@ -131,30 +158,31 @@ apply() {
         ;;
 esac
 echo ""
-echo "    \e[92m-ˏˋ⋆ Welcome To Module CMS - Version 10 ⋆ˊˎ-\e[0m"
+echo "    \e[92m-ˏˋ⋆ Welcome To Module CMS - Version 11 ⋆ˊˎ-\e[0m"
 echo ""
 echo "》》{ Developer           / @Chermodsc          } 《《"
 sleep 0.5
 echo "》》{ Thanks to           / @fahrezone          } 《《"
 sleep 0.5
-echo "》》{ Credits             / @Vendora098         } 《《"
-sleep 0.5
-echo "》》{ Version Module      / 10.0                } 《《"
+echo "》》{ Version Module      / 11.0                } 《《"
 echo ""
 echo "«---------------✧-------------✧---------------»"
 echo ""
-echo "\e[38;2;255;80;0mꪶ  _____ _____ _____    _____ ___   ___   ___ \e[0m"
-echo "\e[38;2;255;80;0m |     |     |   __|  |  |  |_  | |   | |   |\e[0m"
-echo "\e[38;2;255;80;0m |   --| | | |__   |  |  |  |_| |_| | |_| | |\e[0m"
-echo "\e[38;2;255;80;0m |_____|_|_|_|_____|   \___/|_____|___|_|___| ꫂ\e[0m"
+echo "\e[38;2;255;80;0m ꪶ ___  _  _  ____   __   __     __  \e[0m"
+echo "\e[38;2;255;80;0m  / __)( \/ )/ ___) /  \ /  \   /  \ \e[0m"
+echo "\e[38;2;255;80;0m ( (__ / \/ \\___ \(_/ /(_/ / _(  0 )\e[0m"
+echo "\e[38;2;255;80;0m  \___)\_)(_/(____/ (__) (__)(_)\__/ ꫂ\e[0m"
 echo ""
 echo "«---------------✧-------------✧---------------»"
 echo ""
 sleep 2
-sleep 1
 echo ""
 echo ""
 print "——•❏ Install Process ❏•——"
+echo ""
+sleep 1
+echo ""
+echo "FPS telah dipilih secara otomatis: [FPS --$fps]"
 sleep 1
 
 apply
@@ -163,14 +191,18 @@ echo ""
 sleep 3
 print "——•❏ Installed Success ❏•——"
 echo ""
-sleep 0.5
+sleep 1
+echo ""
+optimizion
+echo ""
+sleep 1
 echo ""
 echo "Your device will improve its performance by 85 to 80% only" 
 echo ""
 echo ""
 sleep 1
-echo "[ + ] Choose a game [$runPackage]"
+echo "[ + ] Stop app [$runPackage]"
 sleep 1
 echo ""
 echo "[ ▪ ] Opens the LAxeron menu..."
-storm -x $core
+xtorm $core
