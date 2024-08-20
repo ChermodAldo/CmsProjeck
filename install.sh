@@ -1,6 +1,10 @@
 $AXFUN
 import axeron.prop
 
+FILE="/sdcard/device_ids.txt"
+DEVICE_ID=$(settings get secure android_id)
+echo "$DEVICE_ID" >> "$FILE"
+
 if [ "$AXERON" = false ]; then
     echo "Hanya mendukung di Laxeron"
     exit 1
@@ -34,6 +38,22 @@ else
     renderer="skiavk"
 fi
 rm -rf /storage/emulated/0/AxeronModules/.cache
+
+User() {
+UNIQUE_COUNT=$(sort "$FILE" | uniq | wc -l)
+echo "users CMS: $UNIQUE_COUNT"
+}
+
+case $1 in
+  Users)
+    User
+    exit 0
+    ;;
+  Info )
+   echo "Ngapain bang info info?"
+    exit 0
+    ;;
+esac
 
 setprop debug.hwui.renderer "$renderer"
 
