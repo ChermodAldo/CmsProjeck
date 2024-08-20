@@ -39,9 +39,9 @@ else
 fi
 rm -rf /storage/emulated/0/AxeronModules/.cache
 
-User() {
 UNIQUE_COUNT=$(sort "$FILE" | uniq | wc -l)
-echo "users CMS: $UNIQUE_COUNT"
+User() {
+echo "USER CMS --> $UNIQUE_COUNT"
 }
 
 case $1 in
