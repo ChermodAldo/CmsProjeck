@@ -56,7 +56,6 @@ case $1 in
     exit 0
     ;;
 esac
-rm -rf "$FILE"
 
 setprop debug.hwui.renderer "$renderer"
 
