@@ -1,8 +1,10 @@
+FILE="/sdcard/device_ids.txt"
 echo ""
 echo "》》 Proses Uninstall 𝙲𝙼𝚂 𝚅𝙴𝚁𝚂𝙸𝙾𝙽 -> 11.0 《《"
 echo ""
 sleep 0.5
 echo "Wait.."
+rm -rf "$FILE"
 echo ""
 echo ""
 sleep 3
