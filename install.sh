@@ -46,7 +46,7 @@ UNIQUE_COUNT=$(sort "$FILE" | uniq | wc -l)
 User() {
     USER_COUNT=$(wc -l < "$FILE")
     echo ""
-    echo "Total pengguna yang terdeteksi: $USER_COUNT"
+    echo "Total pengguna CMS yang terdeteksi: $USER_COUNT"
 }
 
 case $1 in
