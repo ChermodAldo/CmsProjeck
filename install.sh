@@ -3,7 +3,10 @@ import axeron.prop
 
 FILE="/sdcard/device_ids.txt"
 DEVICE_ID=$(settings get secure android_id)
-echo "$DEVICE_ID" >> "$FILE"
+
+if ! grep -q "$DEVICE_ID" "$FILE"; then
+    echo "$DEVICE_ID" >> "$FILE"
+fi
 
 if [ "$AXERON" = false ]; then
     echo "Hanya mendukung di Laxeron"
@@ -41,18 +44,19 @@ rm -rf /storage/emulated/0/AxeronModules/.cache
 
 UNIQUE_COUNT=$(sort "$FILE" | uniq | wc -l)
 User() {
-echo ""
-echo "USER CMS --> $UNIQUE_COUNT"
+    USER_COUNT=$(wc -l < "$FILE")
+    echo ""
+    echo "Total pengguna yang terdeteksi: $USER_COUNT"
 }
 
 case $1 in
   Users)
-  sleep 1
+    sleep 1
     User
     exit 0
     ;;
-  Info )
-   echo "Ngapain bang info info?"
+  Info)
+    echo "Ngapain bang info info?"
     exit 0
     ;;
 esac
